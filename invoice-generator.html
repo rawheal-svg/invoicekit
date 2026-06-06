@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InvoiceKit — Professional Invoice Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Noto+Kufi+Arabic:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f7f5f0; --surface: #ffffff; --border: #e8e4dc; --border-mid: #d4cfc4;
+      --text-primary: #1a1816; --text-secondary: #6b6760; --text-tertiary: #9e9b96;
+      --accent: #2a5c45; --accent-light: #e8f2ed; --accent-mid: #4a8c6a;
+      --danger: #c0392b; --danger-light: #fdf0ee;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+    body.ar { font-family: 'Noto Kufi Arabic', sans-serif; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text-primary); letter-spacing: -0.02em; }
+    .nav-logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-badge { font-size: 11px; background: var(--accent-light); color: var(--accent); border: 1px solid #b8d9c8; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+    .lang-switcher { display: flex; border: 1px solid var(--border-mid); border-radius: var(--radius-md); overflow: hidden; }
+    .lang-btn { padding: 6px 14px; border: none; background: transparent; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text-secondary); transition: background .15s, color .15s; display: flex; align-items: center; gap: 5px; }
+    .lang-btn.active { background: var(--accent); color: #fff; font-weight: 500; }
+    .lang-btn:not(.active):hover { background: var(--bg); }
+    .lang-btn.ar-btn { font-family: 'Noto Kufi Arabic', sans-serif; }
+    .page { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    .page-header { margin-bottom: 2rem; animation: fadeUp .4s ease both; }
+    .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 32px; letter-spacing: -0.03em; margin-bottom: 4px; }
+    body.ar .page-header h1 { font-family: 'Noto Kufi Arabic', sans-serif; font-size: 28px; letter-spacing: 0; }
+    .page-header p { color: var(--text-secondary); font-size: 14px; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.25rem; animation: fadeUp .4s ease both; }
+    .card-title { font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    body.ar .card-title { letter-spacing: 0; font-size: 12px; }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
+    input[type="text"], input[type="email"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%; font-family: inherit; font-size: 14px; color: var(--text-primary);
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 9px 12px; outline: none; transition: border-color .15s, background .15s; -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent-mid); background: #fff; }
+    textarea { resize: vertical; min-height: 70px; }
+    select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6760' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+    body.ar select { background-position: left 12px center; padding-right: 12px; padding-left: 36px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    /* LOGO */
+    .logo-drop { border: 1.5px dashed var(--border-mid); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; cursor: pointer; transition: background .15s, border-color .15s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .logo-drop:hover { background: var(--accent-light); border-color: var(--accent-mid); }
+    .logo-drop.drag-over { background: var(--accent-light); border-color: var(--accent); }
+    .logo-drop svg { opacity: .5; }
+    .logo-drop-hint { font-size: 13px; color: var(--text-secondary); }
+    .logo-drop-sub { font-size: 11px; color: var(--text-tertiary); }
+    .logo-preview-row { display: none; align-items: center; gap: 12px; padding: .75rem 1rem; background: var(--accent-light); border: 1px solid #b8d9c8; border-radius: var(--radius-md); }
+    .logo-preview-row img { max-height: 48px; max-width: 140px; object-fit: contain; border-radius: 4px; }
+    .logo-name { font-size: 13px; font-weight: 500; color: var(--accent); flex: 1; }
+    .logo-sub { font-size: 11px; color: var(--accent-mid); }
+    .remove-logo-btn { background: none; border: none; cursor: pointer; color: var(--accent-mid); padding: 4px; border-radius: 4px; display: flex; align-items: center; transition: color .15s; }
+    .remove-logo-btn:hover { color: var(--danger); }
+
+    /* LINE ITEMS — now 6 columns: desc qty price tax% linetotal del */
+    .items-head { display: grid; grid-template-columns: 2fr 60px 90px 80px 90px 36px; gap: 8px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--text-tertiary); padding: 0 2px; margin-bottom: 8px; }
+    body.ar .items-head { letter-spacing: 0; font-size: 12px; }
+    .item-row { display: grid; grid-template-columns: 2fr 60px 90px 80px 90px 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .item-tax-wrap { position: relative; }
+    .item-tax-wrap input { padding-right: 22px; }
+    .item-tax-pct { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-tertiary); pointer-events: none; }
+    .item-total-cell { font-size: 13px; font-weight: 500; color: var(--text-primary); padding: 0 4px; height: 38px; display: flex; align-items: center; }
+    .del-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); transition: all .15s; }
+    .del-btn:hover { background: var(--danger-light); border-color: #e8a9a3; color: var(--danger); }
+    .add-item-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-family: inherit; color: var(--accent); background: none; border: none; cursor: pointer; padding: 6px 0; font-weight: 500; transition: opacity .15s; }
+    .add-item-btn:hover { opacity: .7; }
+
+    /* OPTIONAL TOGGLE */
+    .optional-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-size: 13px; color: var(--text-secondary); }
+    .toggle-switch { width: 36px; height: 20px; background: var(--border-mid); border-radius: 20px; position: relative; transition: background .2s; flex-shrink: 0; }
+    .toggle-switch::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    input[type="checkbox"]:checked + .toggle-switch { background: var(--accent); }
+    input[type="checkbox"]:checked + .toggle-switch::after { transform: translateX(16px); }
+    input[type="checkbox"].sr-only { position: absolute; opacity: 0; width: 0; height: 0; }
+
+    /* TOTALS */
+    .totals-wrap { display: flex; justify-content: flex-end; margin-top: 1.5rem; }
+    body.ar .totals-wrap { justify-content: flex-start; }
+    .totals-table { min-width: 260px; }
+    .tot-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 14px; gap: 32px; }
+    .tot-row .tot-lbl { color: var(--text-secondary); }
+    .tot-row .tot-val { font-variant-numeric: tabular-nums; }
+    .tot-divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+    .tot-grand { font-size: 17px; font-weight: 500; }
+    .tot-discount { color: var(--danger) !important; }
+    .discount-input-row { display: flex; align-items: center; gap: 8px; }
+    .discount-input-row input { width: 80px; text-align: right; }
+    .discount-type-btn { font-size: 12px; padding: 4px 10px; border: 1px solid var(--border-mid); border-radius: var(--radius-sm); background: transparent; cursor: pointer; color: var(--text-secondary); font-family: inherit; transition: all .15s; }
+    .discount-type-btn.active { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
+
+    /* ACTIONS */
+    .actions-bar { display: flex; gap: 12px; margin-top: 1.5rem; align-items: center; flex-wrap: wrap; animation: fadeUp .5s .25s ease both; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md); padding: 11px 22px; font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .15s, transform .1s; }
+    .btn-primary:hover { background: #22503b; }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-secondary { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); color: var(--text-primary); border: 1px solid var(--border-mid); border-radius: var(--radius-md); padding: 10px 18px; font-size: 14px; font-family: inherit; cursor: pointer; transition: background .15s; }
+    .btn-secondary:hover { background: var(--bg); }
+
+    /* PREVIEW */
+    .preview-section { display: none; margin-top: 2rem; animation: fadeUp .35s ease both; }
+    .preview-section-label { font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .preview-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .invoice-paper { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 3rem; font-family: 'DM Sans', sans-serif; color: #1a1816; }
+    .invoice-paper.rtl { font-family: 'Noto Kufi Arabic', sans-serif; direction: rtl; text-align: right; }
+    .inv-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 2px solid #1a1816; }
+    .inv-wordmark { font-family: 'DM Serif Display', serif; font-size: 36px; letter-spacing: -0.03em; color: #1a1816; line-height: 1; }
+    .invoice-paper.rtl .inv-wordmark { font-family: 'Noto Kufi Arabic', sans-serif; font-size: 28px; letter-spacing: 0; }
+    .inv-num-label { font-size: 12px; color: #888; margin-top: 6px; }
+    .inv-biz-block { text-align: right; }
+    .invoice-paper.rtl .inv-biz-block { text-align: left; }
+    .inv-biz-logo { max-height: 56px; max-width: 160px; object-fit: contain; display: block; margin: 0 0 8px auto; }
+    .invoice-paper.rtl .inv-biz-logo { margin: 0 0 8px 0; }
+    .inv-biz-name { font-size: 15px; font-weight: 500; }
+    .inv-biz-detail { font-size: 12px; color: #666; margin-top: 3px; line-height: 1.5; white-space: pre-line; }
+    .inv-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem; }
+    .inv-meta-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: #aaa; margin-bottom: 5px; }
+    .invoice-paper.rtl .inv-meta-label { letter-spacing: 0; font-size: 11px; }
+    .inv-meta-val { font-size: 14px; color: #1a1816; }
+    .inv-meta-val strong { font-weight: 500; font-size: 15px; }
+    .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+    .inv-table thead tr { border-bottom: 1px solid #1a1816; }
+    .inv-table th { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: #aaa; padding: 0 0 10px; text-align: left; }
+    .invoice-paper.rtl .inv-table th { text-align: right; letter-spacing: 0; font-size: 11px; }
+    .inv-table th:not(:first-child) { text-align: right; }
+    .invoice-paper.rtl .inv-table th:not(:first-child) { text-align: left; }
+    .inv-table td { padding: 12px 0; font-size: 13px; border-bottom: 1px solid #f0ede8; }
+    .inv-table td:not(:first-child) { text-align: right; }
+    .invoice-paper.rtl .inv-table td { text-align: right; }
+    .invoice-paper.rtl .inv-table td:not(:first-child) { text-align: left; }
+    .inv-totals-row { display: flex; justify-content: flex-end; }
+    .invoice-paper.rtl .inv-totals-row { justify-content: flex-start; }
+    .inv-totals-inner { min-width: 260px; }
+    .inv-tot-line { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
+    .inv-tot-line span:first-child { color: #888; }
+    .inv-tot-line.discount-line span:last-child { color: #c0392b; }
+    .inv-grand-line { display: flex; justify-content: space-between; font-size: 17px; font-weight: 500; padding: 12px 0 0; margin-top: 8px; border-top: 2px solid #1a1816; }
+    .inv-notes-block { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee; font-size: 12px; color: #888; line-height: 1.7; }
+    .inv-footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 11px; color: #bbb; text-align: center; font-style: italic; }
+    .invoice-paper.rtl .inv-footer { font-style: normal; }
+
+    @media print {
+      nav, .page-header, .card, .actions-bar, .preview-section-label { display: none !important; }
+      .preview-section { display: block !important; margin: 0; }
+      .invoice-paper { border: none; border-radius: 0; padding: 1.5cm; }
+      body { background: #fff; }
+      .page { padding: 0; max-width: 100%; }
+    }
+    @media (max-width: 640px) {
+      .grid2, .grid3 { grid-template-columns: 1fr; }
+      .items-head, .item-row { grid-template-columns: 2fr 60px 90px 36px; }
+      .items-head span:nth-child(4), .items-head span:nth-child(5),
+      .item-row > .item-tax-wrap, .item-row > .item-total-cell { display: none; }
+      .invoice-paper { padding: 1.5rem; }
+      .inv-meta { grid-template-columns: 1fr 1fr; }
+      .inv-top { flex-direction: column; gap: 1rem; }
+      .inv-biz-block { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Invoice<span>Kit</span></div>
+  <div class="nav-right">
+    <div class="lang-switcher">
+      <button class="lang-btn active" id="btn-en" onclick="setLang('en')">🇬🇧 English</button>
+      <button class="lang-btn ar-btn" id="btn-ar" onclick="setLang('ar')">🇦🇪 العربية</button>
+    </div>
+    <span class="nav-badge" id="nav-badge">Beta — Free Testing</span>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1 id="ph-title">Create invoice</h1>
+    <p id="ph-sub">Fill in the details below, preview, then print or save as PDF.</p>
+  </div>
+
+  <!-- YOUR BUSINESS -->
+  <div class="card">
+    <div class="card-title" id="ct-biz">Your business</div>
+    <div style="margin-bottom:14px;">
+      <label id="lbl-logo">Company logo</label>
+      <div id="logo-drop" class="logo-drop"
+        onclick="document.getElementById('logo-file').click()"
+        ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+        <span class="logo-drop-hint" id="lbl-drop-hint">Click to upload or drag & drop your logo</span>
+        <span class="logo-drop-sub" id="lbl-drop-sub">PNG, JPG, SVG · max 2 MB</span>
+      </div>
+      <div id="logo-preview-row" class="logo-preview-row">
+        <img id="logo-thumb" src="" alt="Logo" />
+        <div><div class="logo-name" id="logo-fname"></div><div class="logo-sub" id="lbl-logo-ok">Logo uploaded ✓</div></div>
+        <button class="remove-logo-btn" onclick="removeLogo()" aria-label="Remove logo">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="loadLogo(this.files[0])" />
+    </div>
+    <div class="grid2" style="margin-bottom:12px;">
+      <div><label id="lbl-bizname">Business name</label><input type="text" id="biz-name" placeholder="Acme Studio" /></div>
+      <div><label id="lbl-bizemail">Email</label><input type="email" id="biz-email" placeholder="hello@acme.com" /></div>
+    </div>
+    <div><label id="lbl-bizaddr">Address &amp; contact</label><textarea id="biz-addr" placeholder="123 Main St, Dubai, UAE&#10;+971 50 000 0000&#10;TRN: 123456789"></textarea></div>
+  </div>
+
+  <!-- BILL TO -->
+  <div class="card">
+    <div class="card-title" id="ct-billto">Bill to</div>
+    <div class="grid2" style="margin-bottom:12px;">
+      <div><label id="lbl-cliname">Client name</label><input type="text" id="cli-name" placeholder="Client Company Ltd" /></div>
+      <div><label id="lbl-cliemail">Client email</label><input type="email" id="cli-email" placeholder="accounts@client.com" /></div>
+    </div>
+    <div><label id="lbl-cliaddr">Client address</label><textarea id="cli-addr" placeholder="456 Business Ave, Dubai, UAE"></textarea></div>
+  </div>
+
+  <!-- INVOICE DETAILS -->
+  <div class="card">
+    <div class="card-title" id="ct-details">Invoice details</div>
+    <div class="grid3" style="margin-bottom:12px;">
+      <div><label id="lbl-invnum">Invoice #</label><input type="text" id="inv-num" placeholder="INV-001" /></div>
+      <div><label id="lbl-invdate">Issue date</label><input type="date" id="inv-date" /></div>
+      <div><label id="lbl-invdue">Due date</label><input type="date" id="inv-due" /></div>
+    </div>
+    <div class="grid2">
+      <div><label id="lbl-cur">Currency</label>
+        <select id="inv-cur">
+          <option value="AED">AED — درهم إماراتي</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="SAR">SAR — ريال سعودي</option>
+        </select>
+      </div>
+      <div><label id="lbl-tax">Global Tax / VAT %</label><input type="number" id="inv-tax" min="0" max="100" step="0.1" value="5" /></div>
+    </div>
+    <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px;" id="lbl-tax-note">Global tax applies when no per-line tax is set. Set to 0 to use only per-line taxes.</p>
+  </div>
+
+  <!-- LINE ITEMS -->
+  <div class="card">
+    <div class="card-title" id="ct-items">Line items</div>
+
+    <!-- Per-line tax toggle -->
+    <div style="margin-bottom:14px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <label class="optional-toggle" for="toggle-line-tax">
+        <input type="checkbox" id="toggle-line-tax" class="sr-only" onchange="toggleLineTax(this.checked)" />
+        <span class="toggle-switch"></span>
+        <span id="lbl-toggle-line-tax">Per-line tax <span style="color:var(--text-tertiary);font-size:11px;">(optional)</span></span>
+      </label>
+      <span style="font-size:11px;color:var(--text-tertiary);" id="lbl-line-tax-hint">Enable to set a different tax % per item</span>
+    </div>
+
+    <div class="items-head" id="items-head">
+      <span id="th-desc">Description</span>
+      <span style="text-align:right;" id="th-qty">Qty</span>
+      <span style="text-align:right;" id="th-price">Unit price</span>
+      <span style="text-align:right;" id="th-linetax" class="line-tax-col" style="display:none;">Tax %</span>
+      <span style="text-align:right;" id="th-total">Total</span>
+      <span></span>
+    </div>
+    <div id="items-list"></div>
+    <button class="add-item-btn" onclick="addItem()" id="btn-add-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      <span id="lbl-additem">Add line item</span>
+    </button>
+
+    <!-- TOTALS BLOCK -->
+    <div class="totals-wrap">
+      <div class="totals-table">
+        <div class="tot-row"><span class="tot-lbl" id="lbl-subtotal">Subtotal</span><span class="tot-val" id="t-sub">0.00</span></div>
+
+        <!-- Per-line tax summary row (hidden unless toggled) -->
+        <div class="tot-row" id="row-line-tax" style="display:none;">
+          <span class="tot-lbl" id="lbl-line-tax-total">Line taxes</span>
+          <span class="tot-val" id="t-line-tax">0.00</span>
+        </div>
+
+        <!-- Global tax row -->
+        <div class="tot-row" id="row-global-tax">
+          <span class="tot-lbl"><span id="lbl-tax2">Tax</span> (<span id="t-pct">5</span>%)</span>
+          <span class="tot-val" id="t-tax">0.00</span>
+        </div>
+
+        <!-- Discount row — hidden until enabled -->
+        <div class="tot-row" id="row-discount" style="display:none;">
+          <span class="tot-lbl tot-discount" id="lbl-discount-label">Discount</span>
+          <span class="tot-val tot-discount" id="t-discount">0.00</span>
+        </div>
+
+        <hr class="tot-divider" />
+        <div class="tot-row tot-grand"><span class="tot-lbl" id="lbl-total">Total</span><span class="tot-val" id="t-grand">0.00</span></div>
+      </div>
+    </div>
+
+    <!-- OPTIONAL CONTROLS BELOW TOTALS -->
+    <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Total-level tax toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <label class="optional-toggle" for="toggle-total-tax">
+          <input type="checkbox" id="toggle-total-tax" class="sr-only" onchange="toggleTotalTax(this.checked)" checked />
+          <span class="toggle-switch"></span>
+          <span id="lbl-toggle-total-tax">Tax on total <span style="color:var(--text-tertiary);font-size:11px;">(optional)</span></span>
+        </label>
+        <span style="font-size:11px;color:var(--text-tertiary);" id="lbl-total-tax-hint">Uses the Global Tax % above</span>
+      </div>
+
+      <!-- Discount toggle -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <label class="optional-toggle" for="toggle-discount">
+            <input type="checkbox" id="toggle-discount" class="sr-only" onchange="toggleDiscount(this.checked)" />
+            <span class="toggle-switch"></span>
+            <span id="lbl-toggle-discount">Discount <span style="color:var(--text-tertiary);font-size:11px;">(optional)</span></span>
+          </label>
+        </div>
+        <div id="discount-controls" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button class="discount-type-btn active" id="disc-pct-btn" onclick="setDiscountType('pct')" id="lbl-disc-pct">% Percentage</button>
+          <button class="discount-type-btn" id="disc-flat-btn" onclick="setDiscountType('flat')" id="lbl-disc-flat">Flat amount</button>
+          <input type="number" id="discount-value" min="0" step="0.01" placeholder="0" value="0" oninput="calcTotals()" style="width:100px;text-align:right;" />
+          <span style="font-size:12px;color:var(--text-secondary);" id="discount-unit">%</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="card">
+    <div class="card-title" id="ct-notes">Notes &amp; payment info</div>
+    <textarea id="inv-notes" placeholder="Bank details, payment terms, thank-you note…" style="min-height:80px;"></textarea>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions-bar">
+    <button class="btn-primary" onclick="showPreview()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span id="btn-preview">Preview invoice</span>
+    </button>
+    <button class="btn-secondary" onclick="printInvoice()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      <span id="btn-print">Print / Save PDF</span>
+    </button>
+  </div>
+
+  <div class="preview-section" id="preview-section">
+    <div class="preview-section-label" id="lbl-preview-section">Invoice preview</div>
+    <div class="invoice-paper" id="invoice-paper"></div>
+  </div>
+</div>
+
+<script>
+const T = {
+  en: {
+    navBadge:'Beta — Free Testing', phTitle:'Create invoice', phSub:'Fill in the details below, preview, then print or save as PDF.',
+    ctBiz:'Your business', ctBillto:'Bill to', ctDetails:'Invoice details', ctItems:'Line items', ctNotes:'Notes & payment info',
+    lblLogo:'Company logo', lblDropHint:'Click to upload or drag & drop your logo', lblDropSub:'PNG, JPG, SVG · max 2 MB', lblLogoOk:'Logo uploaded ✓',
+    lblBizname:'Business name', lblBizemail:'Email', lblBizaddr:'Address & contact',
+    lblCliname:'Client name', lblCliemail:'Client email', lblCliaddr:'Client address',
+    lblInvnum:'Invoice #', lblInvdate:'Issue date', lblInvdue:'Due date',
+    lblCur:'Currency', lblTax:'Global Tax / VAT %', lblTaxNote:'Global tax applies when no per-line tax is set. Set to 0 to use only per-line taxes.',
+    thDesc:'Description', thQty:'Qty', thPrice:'Unit price', thLinetax:'Tax %', thTotal:'Total',
+    lblAdditem:'Add line item', lblSubtotal:'Subtotal', lblTax2:'Tax', lblTotal:'Total',
+    lblLineTaxTotal:'Line taxes', lblDiscountLabel:'Discount',
+    lblToggleLineTax:'Per-line tax', lblLineTaxHint:'Enable to set a different tax % per item',
+    lblToggleTotalTax:'Tax on total', lblTotalTaxHint:'Uses the Global Tax % above',
+    lblToggleDiscount:'Discount', lblDiscPct:'% Percentage', lblDiscFlat:'Flat amount',
+    btnPreview:'Preview invoice', btnPrint:'Print / Save PDF', lblPreviewSection:'Invoice preview',
+    invWord:'Invoice', invBilledTo:'Billed to', invIssueDate:'Issue date', invDueDate:'Due date',
+    invDesc:'Description', invQty:'Qty', invUnitPrice:'Unit price', invAmount:'Amount',
+    invSubtotal:'Subtotal', invLineTax:'Line taxes', invTax:'Tax', invDiscount:'Discount', invTotalDue:'Total due',
+    invFooter:'Generated with InvoiceKit · invoicekit.app',
+    itemPlaceholder:'Service or product description',
+    notesPlaceholder:'Bank details, payment terms, thank-you note…',
+    bizPlaceholder:'123 Main St, Dubai, UAE\n+971 50 000 0000\nTRN: 123456789',
+    cliPlaceholder:'456 Business Ave, Dubai, UAE',
+  },
+  ar: {
+    navBadge:'نسخة تجريبية — مجانية', phTitle:'إنشاء فاتورة', phSub:'أدخل التفاصيل أدناه، ثم اعرض الفاتورة أو اطبعها.',
+    ctBiz:'بيانات شركتك', ctBillto:'فاتورة إلى', ctDetails:'تفاصيل الفاتورة', ctItems:'بنود الفاتورة', ctNotes:'ملاحظات وبيانات الدفع',
+    lblLogo:'شعار الشركة', lblDropHint:'انقر للرفع أو اسحب الشعار هنا', lblDropSub:'PNG، JPG، SVG · الحد الأقصى 2 ميغابايت', lblLogoOk:'تم رفع الشعار ✓',
+    lblBizname:'اسم الشركة', lblBizemail:'البريد الإلكتروني', lblBizaddr:'العنوان والتواصل',
+    lblCliname:'اسم العميل', lblCliemail:'بريد العميل', lblCliaddr:'عنوان العميل',
+    lblInvnum:'رقم الفاتورة', lblInvdate:'تاريخ الإصدار', lblInvdue:'تاريخ الاستحقاق',
+    lblCur:'العملة', lblTax:'نسبة الضريبة الإجمالية %', lblTaxNote:'تُطبق الضريبة الإجمالية عند عدم تحديد ضريبة لكل بند.',
+    thDesc:'البيان', thQty:'الكمية', thPrice:'سعر الوحدة', thLinetax:'الضريبة %', thTotal:'الإجمالي',
+    lblAdditem:'إضافة بند', lblSubtotal:'المجموع الجزئي', lblTax2:'الضريبة', lblTotal:'الإجمالي',
+    lblLineTaxTotal:'ضرائب البنود', lblDiscountLabel:'الخصم',
+    lblToggleLineTax:'ضريبة لكل بند', lblLineTaxHint:'لتحديد نسبة ضريبة مختلفة لكل بند',
+    lblToggleTotalTax:'ضريبة على الإجمالي', lblTotalTaxHint:'تستخدم نسبة الضريبة الإجمالية أعلاه',
+    lblToggleDiscount:'خصم', lblDiscPct:'نسبة مئوية', lblDiscFlat:'مبلغ ثابت',
+    btnPreview:'معاينة الفاتورة', btnPrint:'طباعة / حفظ PDF', lblPreviewSection:'معاينة الفاتورة',
+    invWord:'فاتورة', invBilledTo:'إلى', invIssueDate:'تاريخ الإصدار', invDueDate:'تاريخ الاستحقاق',
+    invDesc:'البيان', invQty:'الكمية', invUnitPrice:'سعر الوحدة', invAmount:'المبلغ',
+    invSubtotal:'المجموع الجزئي', invLineTax:'ضرائب البنود', invTax:'الضريبة', invDiscount:'الخصم', invTotalDue:'الإجمالي المستحق',
+    invFooter:'تم الإنشاء بواسطة InvoiceKit · invoicekit.app',
+    itemPlaceholder:'وصف الخدمة أو المنتج',
+    notesPlaceholder:'بيانات البنك، شروط الدفع، رسالة شكر…',
+    bizPlaceholder:'شارع الشيخ زايد، دبي، الإمارات\n+971 50 000 0000\nرقم التسجيل الضريبي: 123456789',
+    cliPlaceholder:'شارع الأعمال، دبي، الإمارات',
+  }
+};
+
+let lang = 'en', items = [], uid = 0, logoUrl = null;
+let lineTaxEnabled = false, totalTaxEnabled = true, discountEnabled = false;
+let discountType = 'pct'; // 'pct' | 'flat'
+
+/* ── LANGUAGE ── */
+function setLang(l) {
+  lang = l;
+  const t = T[l];
+  document.documentElement.lang = l;
+  document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+  document.body.classList.toggle('ar', l === 'ar');
+  document.getElementById('btn-en').classList.toggle('active', l === 'en');
+  document.getElementById('btn-ar').classList.toggle('active', l === 'ar');
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const setP = (id, val) => { const el = document.getElementById(id); if (el) el.placeholder = val; };
+  set('nav-badge',t.navBadge); set('ph-title',t.phTitle); set('ph-sub',t.phSub);
+  set('ct-biz',t.ctBiz); set('ct-billto',t.ctBillto); set('ct-details',t.ctDetails); set('ct-items',t.ctItems); set('ct-notes',t.ctNotes);
+  set('lbl-logo',t.lblLogo); set('lbl-drop-hint',t.lblDropHint); set('lbl-drop-sub',t.lblDropSub); set('lbl-logo-ok',t.lblLogoOk);
+  set('lbl-bizname',t.lblBizname); set('lbl-bizemail',t.lblBizemail); set('lbl-bizaddr',t.lblBizaddr);
+  set('lbl-cliname',t.lblCliname); set('lbl-cliemail',t.lblCliemail); set('lbl-cliaddr',t.lblCliaddr);
+  set('lbl-invnum',t.lblInvnum); set('lbl-invdate',t.lblInvdate); set('lbl-invdue',t.lblInvdue);
+  set('lbl-cur',t.lblCur); set('lbl-tax',t.lblTax); set('lbl-tax-note',t.lblTaxNote);
+  set('th-desc',t.thDesc); set('th-qty',t.thQty); set('th-price',t.thPrice); set('th-linetax',t.thLinetax); set('th-total',t.thTotal);
+  set('lbl-additem',t.lblAdditem); set('lbl-subtotal',t.lblSubtotal); set('lbl-tax2',t.lblTax2); set('lbl-total',t.lblTotal);
+  set('lbl-line-tax-total',t.lblLineTaxTotal); set('lbl-discount-label',t.lblDiscountLabel);
+  set('lbl-toggle-line-tax',t.lblToggleLineTax); set('lbl-line-tax-hint',t.lblLineTaxHint);
+  set('lbl-toggle-total-tax',t.lblToggleTotalTax); set('lbl-total-tax-hint',t.lblTotalTaxHint);
+  set('lbl-toggle-discount',t.lblToggleDiscount);
+  set('btn-preview',t.btnPreview); set('btn-print',t.btnPrint); set('lbl-preview-section',t.lblPreviewSection);
+  setP('biz-addr',t.bizPlaceholder); setP('cli-addr',t.cliPlaceholder); setP('inv-notes',t.notesPlaceholder);
+  renderItems();
+}
+
+/* ── LOGO ── */
+function onDragOver(e) { e.preventDefault(); document.getElementById('logo-drop').classList.add('drag-over'); }
+function onDragLeave(e) { document.getElementById('logo-drop').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault(); document.getElementById('logo-drop').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) loadLogo(f);
+}
+function loadLogo(file) {
+  if (!file) return;
+  if (file.size > 2097152) { alert('Please use an image under 2 MB.'); return; }
+  const r = new FileReader();
+  r.onload = e => {
+    logoUrl = e.target.result;
+    document.getElementById('logo-thumb').src = logoUrl;
+    document.getElementById('logo-fname').textContent = file.name;
+    document.getElementById('logo-drop').style.display = 'none';
+    document.getElementById('logo-preview-row').style.display = 'flex';
+  };
+  r.readAsDataURL(file);
+}
+function removeLogo() {
+  logoUrl = null; document.getElementById('logo-file').value = '';
+  document.getElementById('logo-drop').style.display = 'flex';
+  document.getElementById('logo-preview-row').style.display = 'none';
+}
+
+/* ── TOGGLE HANDLERS ── */
+function toggleLineTax(on) {
+  lineTaxEnabled = on;
+  document.querySelectorAll('.line-tax-col').forEach(el => el.style.display = on ? '' : 'none');
+  // hide global tax row when per-line is on (they can still use both if they want via total tax toggle)
+  document.getElementById('row-global-tax').style.display = (!on && totalTaxEnabled) ? '' : (totalTaxEnabled && !on ? '' : 'none');
+  document.getElementById('row-line-tax').style.display = on ? '' : 'none';
+  renderItems();
+}
+function toggleTotalTax(on) {
+  totalTaxEnabled = on;
+  document.getElementById('row-global-tax').style.display = on ? '' : 'none';
+  calcTotals();
+}
+function toggleDiscount(on) {
+  discountEnabled = on;
+  document.getElementById('discount-controls').style.display = on ? 'flex' : 'none';
+  document.getElementById('row-discount').style.display = on ? '' : 'none';
+  calcTotals();
+}
+function setDiscountType(type) {
+  discountType = type;
+  document.getElementById('disc-pct-btn').classList.toggle('active', type === 'pct');
+  document.getElementById('disc-flat-btn').classList.toggle('active', type === 'flat');
+  document.getElementById('discount-unit').textContent = type === 'pct' ? '%' : document.getElementById('inv-cur').value;
+  calcTotals();
+}
+
+/* ── LINE ITEMS ── */
+function addItem(desc='', qty=1, price=0, tax='') {
+  const id = ++uid;
+  items.push({ id, desc, qty, price, tax });
+  renderItems();
+}
+function removeItem(id) { items = items.filter(i => i.id !== id); renderItems(); }
+function updateField(id, key, val) {
+  const it = items.find(i => i.id === id); if (!it) return;
+  it[key] = key === 'desc' ? val : (parseFloat(val) || 0);
+  calcTotals();
+}
+function renderItems() {
+  const t = T[lang];
+  const c = document.getElementById('items-list');
+  c.innerHTML = '';
+  items.forEach(it => {
+    const d = document.createElement('div');
+    d.className = 'item-row';
+    const taxCol = lineTaxEnabled
+      ? `<div class="item-tax-wrap line-tax-col">
+           <input type="number" min="0" max="100" step="0.1" value="${it.tax}" placeholder="0" style="text-align:right;" oninput="updateField(${it.id},'tax',this.value)" />
+           <span class="item-tax-pct">%</span>
+         </div>`
+      : `<div class="line-tax-col" style="display:none;"></div>`;
+    d.innerHTML = `
+      <input type="text" placeholder="${t.itemPlaceholder}" value="${it.desc}" oninput="updateField(${it.id},'desc',this.value)" />
+      <input type="number" min="0" step="1" value="${it.qty}" style="text-align:right;" oninput="updateField(${it.id},'qty',this.value)" />
+      <input type="number" min="0" step="0.01" value="${it.price}" style="text-align:right;" oninput="updateField(${it.id},'price',this.value)" />
+      ${taxCol}
+      <div class="item-total-cell" id="itot-${it.id}">${(it.qty * it.price).toFixed(2)}</div>
+      <button class="del-btn" onclick="removeItem(${it.id})" aria-label="Remove">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>`;
+    c.appendChild(d);
+  });
+  calcTotals();
+}
+
+function calcTotals() {
+  let sub = 0, lineTaxTotal = 0;
+  items.forEach(it => {
+    const lineAmt = it.qty * it.price;
+    sub += lineAmt;
+    if (lineTaxEnabled && it.tax > 0) lineTaxTotal += lineAmt * it.tax / 100;
+    const el = document.getElementById('itot-' + it.id);
+    if (el) el.textContent = lineAmt.toFixed(2);
+  });
+  const globalPct = parseFloat(document.getElementById('inv-tax').value) || 0;
+  const globalTax = totalTaxEnabled ? sub * globalPct / 100 : 0;
+  let discountAmt = 0;
+  if (discountEnabled) {
+    const dv = parseFloat(document.getElementById('discount-value').value) || 0;
+    discountAmt = discountType === 'pct' ? sub * dv / 100 : dv;
+  }
+  const grand = sub + lineTaxTotal + globalTax - discountAmt;
+  const cur = document.getElementById('inv-cur').value;
+  document.getElementById('t-sub').textContent = sub.toFixed(2);
+  document.getElementById('t-line-tax').textContent = lineTaxTotal.toFixed(2);
+  document.getElementById('t-tax').textContent = globalTax.toFixed(2);
+  document.getElementById('t-pct').textContent = globalPct;
+  document.getElementById('t-discount').textContent = '−' + discountAmt.toFixed(2);
+  document.getElementById('t-grand').textContent = grand.toFixed(2);
+  document.getElementById('discount-unit').textContent = discountType === 'pct' ? '%' : cur;
+}
+
+/* ── PREVIEW ── */
+function fmtDate(d, l) {
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString(l === 'ar' ? 'ar-AE' : 'en-GB', { day:'numeric', month:'long', year:'numeric' });
+}
+
+function showPreview() {
+  const t = T[lang];
+  const cur = document.getElementById('inv-cur').value;
+  const globalPct = parseFloat(document.getElementById('inv-tax').value) || 0;
+  const isRtl = lang === 'ar';
+  let sub = 0, lineTaxTotal = 0;
+
+  const showLineTaxCol = lineTaxEnabled;
+  const thLineTax = showLineTaxCol ? `<th style="text-align:right;">${t.thLinetax}</th>` : '';
+
+  const rows = items.map(it => {
+    const lineAmt = it.qty * it.price; sub += lineAmt;
+    const lineTax = (lineTaxEnabled && it.tax > 0) ? lineAmt * it.tax / 100 : 0;
+    lineTaxTotal += lineTax;
+    const lineTaxCell = showLineTaxCol ? `<td style="text-align:right;">${it.tax > 0 ? it.tax + '%' : '—'}</td>` : '';
+    if (isRtl) {
+      return `<tr>
+        <td style="text-align:left;">${lineAmt.toFixed(2)}</td>
+        ${showLineTaxCol ? `<td style="text-align:left;">${it.tax > 0 ? it.tax+'%' : '—'}</td>` : ''}
+        <td style="text-align:left;">${it.price.toFixed(2)}</td>
+        <td style="text-align:left;">${it.qty}</td>
+        <td>${it.desc || '—'}</td>
+      </tr>`;
+    }
+    return `<tr>
+      <td>${it.desc || '—'}</td>
+      <td style="text-align:right;">${it.qty}</td>
+      <td style="text-align:right;">${it.price.toFixed(2)}</td>
+      ${lineTaxCell}
+      <td style="text-align:right;">${lineAmt.toFixed(2)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6" style="color:#aaa;font-style:italic;padding:16px 0;">${isRtl ? 'لا توجد بنود.' : 'No line items added yet.'}</td></tr>`;
+
+  const globalTax = totalTaxEnabled ? sub * globalPct / 100 : 0;
+  let discountAmt = 0;
+  if (discountEnabled) {
+    const dv = parseFloat(document.getElementById('discount-value').value) || 0;
+    discountAmt = discountType === 'pct' ? sub * dv / 100 : dv;
+  }
+  const grand = sub + lineTaxTotal + globalTax - discountAmt;
+
+  const bizName = document.getElementById('biz-name').value || (isRtl ? 'شركتك' : 'Your Business');
+  const bizEmail = document.getElementById('biz-email').value;
+  const bizAddr = document.getElementById('biz-addr').value;
+  const cliName = document.getElementById('cli-name').value || (isRtl ? 'العميل' : 'Client');
+  const cliEmail = document.getElementById('cli-email').value;
+  const cliAddr = document.getElementById('cli-addr').value;
+  const invNum = document.getElementById('inv-num').value || 'INV-001';
+  const notes = document.getElementById('inv-notes').value;
+
+  const thRow = isRtl
+    ? `<th style="text-align:left;">${t.invAmount} (${cur})</th>${showLineTaxCol?`<th style="text-align:left;">${t.thLinetax}</th>`:''}<th style="text-align:left;">${t.invUnitPrice}</th><th style="text-align:left;">${t.invQty}</th><th>${t.invDesc}</th>`
+    : `<th>${t.invDesc}</th><th style="text-align:right;">${t.invQty}</th><th style="text-align:right;">${t.invUnitPrice} (${cur})</th>${showLineTaxCol?`<th style="text-align:right;">${t.thLinetax}</th>`:''}<th style="text-align:right;">${t.invAmount} (${cur})</th>`;
+
+  const totalsHtml = `
+    <div class="inv-tot-line"><span>${t.invSubtotal}</span><span>${cur} ${sub.toFixed(2)}</span></div>
+    ${lineTaxEnabled && lineTaxTotal > 0 ? `<div class="inv-tot-line"><span>${t.invLineTax}</span><span>${cur} ${lineTaxTotal.toFixed(2)}</span></div>` : ''}
+    ${totalTaxEnabled ? `<div class="inv-tot-line"><span>${t.invTax} (${globalPct}%)</span><span>${cur} ${globalTax.toFixed(2)}</span></div>` : ''}
+    ${discountEnabled && discountAmt > 0 ? `<div class="inv-tot-line discount-line"><span>${t.invDiscount}</span><span>−${cur} ${discountAmt.toFixed(2)}</span></div>` : ''}
+    <div class="inv-grand-line"><span>${t.invTotalDue}</span><span>${cur} ${grand.toFixed(2)}</span></div>`;
+
+  const paper = document.getElementById('invoice-paper');
+  paper.className = 'invoice-paper' + (isRtl ? ' rtl' : '');
+  paper.innerHTML = `
+    <div class="inv-top">
+      <div><div class="inv-wordmark">${t.invWord}</div><div class="inv-num-label"># ${invNum}</div></div>
+      <div class="inv-biz-block">
+        ${logoUrl ? `<img class="inv-biz-logo" src="${logoUrl}" alt="Logo" />` : ''}
+        <div class="inv-biz-name">${bizName}</div>
+        ${bizEmail ? `<div class="inv-biz-detail">${bizEmail}</div>` : ''}
+        ${bizAddr ? `<div class="inv-biz-detail">${bizAddr}</div>` : ''}
+      </div>
+    </div>
+    <div class="inv-meta">
+      <div>
+        <div class="inv-meta-label">${t.invBilledTo}</div>
+        <div class="inv-meta-val"><strong>${cliName}</strong></div>
+        ${cliEmail ? `<div class="inv-meta-val" style="font-size:12px;color:#666;">${cliEmail}</div>` : ''}
+        ${cliAddr ? `<div class="inv-meta-val" style="font-size:12px;color:#666;white-space:pre-line;">${cliAddr}</div>` : ''}
+      </div>
+      <div><div class="inv-meta-label">${t.invIssueDate}</div><div class="inv-meta-val">${fmtDate(document.getElementById('inv-date').value, lang)}</div></div>
+      <div><div class="inv-meta-label">${t.invDueDate}</div><div class="inv-meta-val">${fmtDate(document.getElementById('inv-due').value, lang)}</div></div>
+    </div>
+    <table class="inv-table"><thead><tr>${thRow}</tr></thead><tbody>${rows}</tbody></table>
+    <div class="inv-totals-row"><div class="inv-totals-inner">${totalsHtml}</div></div>
+    ${notes ? `<div class="inv-notes-block">${notes}</div>` : ''}
+    <div class="inv-footer">${t.invFooter}</div>`;
+
+  const sec = document.getElementById('preview-section');
+  sec.style.display = 'block';
+  setTimeout(() => sec.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+}
+
+function printInvoice() { showPreview(); setTimeout(() => window.print(), 400); }
+
+document.getElementById('inv-tax').addEventListener('input', calcTotals);
+document.getElementById('inv-cur').addEventListener('change', calcTotals);
+
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('inv-date').value = today;
+const due = new Date(); due.setDate(due.getDate() + 30);
+document.getElementById('inv-due').value = due.toISOString().split('T')[0];
+
+addItem('Design services', 1, 2000, '');
+addItem('Revision rounds', 2, 500, '');
+</script>
+</body>
+</html>
